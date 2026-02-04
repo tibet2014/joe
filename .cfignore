@@ -1,0 +1,11 @@
+# 忽略说明文件
+README.md
+LICENSE
+docs/
+
+# 忽略源代码，只上传 _worker.js
+*.js
+!_worker.js
+
+# 忽略 Python 脚本
+*.py
