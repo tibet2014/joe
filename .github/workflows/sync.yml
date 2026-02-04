@@ -35,7 +35,7 @@ jobs:
           # 设置为 false 表示直接合并，设置为 true 表示只测试不合并
           test_mode: false
           
-- name: Modify files and Push changes
+      - name: Modify files and Push changes
         # 只有当同步成功后，才执行这一步
         if: steps.sync.outputs.has_new_commits == 'true' || github.event_name == 'workflow_dispatch'
         run: |
