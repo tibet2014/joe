@@ -35,45 +35,34 @@ jobs:
           # 设置为 false 表示直接合并，设置为 true 表示只测试不合并
           test_mode: false
           
-      - name: Modify files and Push changes
+- name: Modify files and Push changes
         # 只有当同步成功后，才执行这一步
         if: steps.sync.outputs.has_new_commits == 'true' || github.event_name == 'workflow_dispatch'
         run: |
-          # --- A. 你的自定义命令区 ---
-          
           echo "正在执行文件操作..."
 
-          # 例子 1：复制文件 (常用于生成配置文件)
-          # 如果 upstream 有 config.example，你想自动生成一个 config.json
-          # cp -f config.example.json config.json
+          # 1. 核心操作：将 "少年你相信光吗" 重命名为 "_worker.js" (这是 CF Pages 运行的入口)
+          # 使用引号包裹文件名，防止因为文件名里的空格或特殊字符报错
+          if [ -f "少年你相信光吗" ]; then
+            mv -f "少年你相信光吗" "_worker.js"
+            echo "成功重命名 _worker.js"
+          else
+            echo "警告：未找到源文件 '少年你相信光吗'，可能文件名已变或无需重命名"
+          fi
 
-          # 例子 2：文件改名 (移动)
-          # mv -f old_name.txt new_name.txt
+          # 2. 清理操作：删除多余的说明文件 (原代码用的 mv 没加目标，这里改为 rm 删除)
+          # 如果你想保留它们，请删掉下面的行
+          rm -f "readme.md"
+          rm -f "明文源吗"
+          rm -f "فارسی.md"
 
-          # 例子 3：修改某个具体文件 (比如给脚本加执行权限)
-          # chmod +x ./install.sh
-          
-          # 这里写你的实际命令，例如：
-          mv -f 少年你相信光吗 _worker.js
-          mv readm.md
-          mv 明文源吗
-          mv فارسی.md
-
-          # --- B. 将修改保存回 GitHub ---
-          
-          # 配置 Git 用户信息 (这是 GitHub Actions 机器人的默认邮箱)
+          # 3. 配置 Git 并提交
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          # 添加所有修改
           git add .
-
-          # 提交修改 (如果没有文件发生变化，这一步会跳过，不会报错)
-          git commit -m "Auto: Rename/Copy files after sync" || echo "No changes to commit"
-
-          # 推送回你的仓库
-          git push
-      # =========================================================
+          git commit -m "Auto: Rename to _worker.js and cleanup" || echo "No changes to commit"
+          git push      # =========================================================
       # 第三步：检查是否有冲突（可选）
       - name: Sync check
         if: failure()
