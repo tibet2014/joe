@@ -52,7 +52,8 @@ jobs:
 
           # 2. 清理操作：删除多余的说明文件 (原代码用的 mv 没加目标，这里改为 rm 删除)
           # 如果你想保留它们，请删掉下面的行
-          rm -f "readme.md"
+          rm -f "README.md"
+          rm -f "snippets"
           rm -f "明文源吗"
           rm -f "فارسی.md"
 
