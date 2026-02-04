@@ -1,0 +1,82 @@
+name: Upstream Sync
+
+permissions:
+  contents: write
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # 每天 UTC 时间 0点 (北京时间早上8点) 执行一次
+  workflow_dispatch: # 允许手动点击按钮触发
+
+jobs:
+  sync_latest_from_upstream:
+    name: Sync latest commits from upstream repo
+    runs-on: ubuntu-latest
+    if: ${{ github.event.repository.fork }} # 只有 Fork 的仓库才执行
+
+    steps:
+      # 第一步：检出代码
+      - name: Checkout target repo
+        uses: actions/checkout@v3
+
+      # 第二步：运行同步动作
+      - name: Sync upstream changes
+        id: sync
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4
+        with:
+          # ⚠️【必填】这里改成原作者的仓库地址 (用户名/仓库名)
+          upstream_sync_repo: byJoey/cfnew
+          # ⚠️【选填】原仓库的分支，一般是 main 或 master
+          upstream_sync_branch: main
+          # ⚠️【选填】你想要更新的自己仓库的分支
+          target_sync_branch: main
+          # Token 设置，保持默认即可
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+          # 设置为 false 表示直接合并，设置为 true 表示只测试不合并
+          test_mode: false
+          
+      - name: Modify files and Push changes
+        # 只有当同步成功后，才执行这一步
+        if: steps.sync.outputs.has_new_commits == 'true' || github.event_name == 'workflow_dispatch'
+        run: |
+          # --- A. 你的自定义命令区 ---
+          
+          echo "正在执行文件操作..."
+
+          # 例子 1：复制文件 (常用于生成配置文件)
+          # 如果 upstream 有 config.example，你想自动生成一个 config.json
+          # cp -f config.example.json config.json
+
+          # 例子 2：文件改名 (移动)
+          # mv -f old_name.txt new_name.txt
+
+          # 例子 3：修改某个具体文件 (比如给脚本加执行权限)
+          # chmod +x ./install.sh
+          
+          # 这里写你的实际命令，例如：
+          mv -f 少年你相信光吗 _worker.js
+          mv readm.md
+          mv 明文源吗
+          mv فارسی.md
+
+          # --- B. 将修改保存回 GitHub ---
+          
+          # 配置 Git 用户信息 (这是 GitHub Actions 机器人的默认邮箱)
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # 添加所有修改
+          git add .
+
+          # 提交修改 (如果没有文件发生变化，这一步会跳过，不会报错)
+          git commit -m "Auto: Rename/Copy files after sync" || echo "No changes to commit"
+
+          # 推送回你的仓库
+          git push
+      # =========================================================
+      # 第三步：检查是否有冲突（可选）
+      - name: Sync check
+        if: failure()
+        run: |
+          echo "[Error] 由于冲突，同步失败。请手动解决冲突。"
+          exit 1
